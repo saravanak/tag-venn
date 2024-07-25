@@ -78,10 +78,8 @@ export class VennElement extends LitElement {
   }
 
   firstUpdated() {
-    console.log("apple", "A∩B∪C" == this.value, this.value);
-
     const canvas = this.canvas;
-    this.ctx = this.canvas.getContext("2d");
+    this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
     canvas.width = 300;
     canvas.height = 300;
 
@@ -95,8 +93,6 @@ export class VennElement extends LitElement {
   }
 
   shouldUpdate(changedProperties: Map<string, any>) {
-    console.log(changedProperties);
-
     // Only update element if prop1 changed.
     return changedProperties.has("value");
   }
@@ -153,6 +149,7 @@ export class VennElement extends LitElement {
     }
 
     const ctx = this.ctx;
+
     const imageData = this.ctx.getImageData(0, 0, 300, 300);
 
     const data = imageData.data;
@@ -161,7 +158,6 @@ export class VennElement extends LitElement {
       const cell = i / 4;
       const pixelX = cell % imageData.height;
       const pixelY = Math.floor(cell / imageData.width);
-
 
       const isPointInPath = this.isPointInPath({ x: pixelX, y: pixelY });
       data[i] = isPointInPath ? 85 : 255; //red
@@ -181,11 +177,15 @@ export class VennElement extends LitElement {
     const text = ctx.measureText(this.value || "Select Expr Above"); // TextMetrics object
 
     ctx.font = "30px Ubuntu bold";
-    ctx.fillStyle = this.value ? "green": "red";
-    ctx.fillText(this.value || "Select Expr Above", this.size / 2 - text.width, this.margin * 3);
+    ctx.fillStyle = this.value ? "green" : "red";
+    ctx.fillText(
+      this.value || "Select Expr Above",
+      this.size / 2 - text.width,
+      this.margin * 3
+    );
 
     const setNames = ["A", "B", "C"];
-    this.paths.slice(0, 3).forEach((v, i) => {
+    this.paths.slice(0, 3).forEach((_, i) => {
       ctx.font = "15px Ubuntu";
       ctx.fillText(setNames[i], this.centers[i * 2], this.centers[i * 2 + 1]);
     });
