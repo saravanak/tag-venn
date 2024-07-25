@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lets draw some Venn Diagrams</title>
+    <link rel="stylesheet" href="./src/index.css" />
+    <script type="module" src="/src/venn.ts"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body>
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+        padding: 1em;
+        flex-wrap: wrap;
+      "
+    >
+      <h1>
+        This is a demo of drawing Venn Diagrams using Canvas element, from
+        within a web-component!
+      </h1>
+      <p>
+        This canvas is brought to you by a Web Component called
+        <code>&lt;draw-venn&gt;&lt;/draw-venn&gt;</code>. This web-component is
+        written in Lit.
+      </p>
+      <p>Accompanying blog: TODO</p>
+
+      <p>
+        While the core is written to be extensive, this is still not! For now,
+        the best bet to tinker would be to clone the backing repo. Don't forget
+        to give a star if you think this deserves it!
+      </p>
+      <p>Interaction brought to you by AlpineJS</p>
+      <div style="display: flex; gap: 0.5em; flex-wrap: wrap">
+        <div>
+          <draw-venn value="A&cap;B" />
+        </div>
+        <div>
+          <draw-venn value="(A&cap;B)-C" />
+        </div>
+        <div>
+          <draw-venn value="A&cup;B" />
+        </div>
+        <div>
+          <draw-venn value="A&cap;C" />
+        </div>
+        <div>
+          <draw-venn value="A&cup;C" />
+        </div>
+        <div>
+          <draw-venn value="(A&cup;C)&cap;B" />
+        </div>
+
+        <div x-data="vennCommands" style="border:1px solid gray;border-radius: 5px;padding: 1em;">
+          <p style="background-color: yellow; flex-wrap: wrap">
+            !!! Click/Hover on the expressions below to see a live popup of the
+            results!         
+            >
+          </p>
+          <template
+            x-for="(commandSequence,seqIndex) in commands"
+            :key="seqIndex"
+          >
+            <div>
+              <div style="display: flex">
+                <template
+                  x-for="(command,commandIndex) in commandSequence"
+                  :key="commandIndex"
+                >
+                  <div
+                    style="display: flex; font-size: 2em"
+                    x-on:mouseover="currentCommand = command; window.scrollBy(0, window.innerHeight)"
+                    x-on:click="currentCommand = command;"
+                  >
+                    <span
+                      x-text="command.label"
+                      :style="hiStyleFor(command, commandIndex, seqIndex)"
+                    ></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <div class="result-holder">
+            <draw-venn :value="currentCommand && currentCommand.command" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("vennCommands", () => ({
+          currentCommand: null,
+          commands: [
+            [
+              {
+                command: "A∪C",
+                label: "(A∪C)",
+                range: [0, 0],
+              },
+              {
+                command: "(A∪C)∩B",
+                label: "∩B",
+                range: [1, 0],
+              },
+            ],
+            [
+              {
+                command: "A∩(B∪C)",
+                label: "A∩",
+                range: [0, 1],
+              },
+              {
+                command: "B∪C",
+                label: "(B∪C)",
+                range: [0, 0],
+              },
+            ],
+            [
+              {
+                command: "A∩B",
+                label: "(A∩B)",
+                range: [0, 0],
+              },
+              {
+                command: "(A∩B)∪(A∩C)",
+                label: "∪",
+                range: [1, 1],
+              },
+              {
+                command: "A∩C",
+                label: "(A∩C)",
+                range: [0, 0],
+              },
+            ],
+          ],
+          hiStyleFor: function (command, commandIndex, seqIndex) {
+            console.log(commandIndex, seqIndex);
+            if (!this.currentCommand) {
+              return {};
+            }
+            const currentCommandSeqIndex = this.commands.findIndex((part) =>
+              part.find((p) => p.command == this.currentCommand.command)
+            );
+            if (currentCommandSeqIndex != seqIndex) {
+              return {};
+            }
+            const currentCommandIndex = this.commands[seqIndex].findIndex(
+              (v) => v.command == this.currentCommand.command
+            );
+
+            const [leftRange, rightRange] = this.currentCommand.range;
+            let color;
+
+            if (commandIndex == currentCommandIndex) {
+              color = "yellow";
+            } else if (commandIndex < currentCommandIndex) {
+              color =
+                currentCommandIndex - commandIndex <= leftRange
+                  ? "yellow"
+                  : "none";
+            } else if (commandIndex > currentCommandIndex) {
+              color =
+                commandIndex - currentCommandIndex <= rightRange
+                  ? "yellow"
+                  : "none";
+            }
+            return {
+              backgroundColor: color,
+            };
+          },
+        }));
+      });
+    </script>
+  </body>
+</html>
+
